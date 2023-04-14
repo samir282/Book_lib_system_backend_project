@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 
 
 from server.database import base
-from author.model import Author
+# from author.model import Author
 
 
 class Book(base):

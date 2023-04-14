@@ -9,5 +9,5 @@ class Author(base):
 
     id=Column(Integer,primary_key=True,index=True)
     name = Column(String(255))
-    books = relationship('Book',back_populates='authors')
+    books = relationship('Book',cascade = "all,delete",back_populates='authors')
     

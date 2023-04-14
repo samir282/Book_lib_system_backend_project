@@ -10,10 +10,11 @@ def create_book(request : book_data, db : Session):
     try:
         author = db.query(Author).filter(Author.id == request.author_id).first()
         if not author:
-            author = Author(name=request.author_name)
-            db.add(author)
-            db.commit()
-            db.refresh(author)
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "Author doesn't exist. First update the author data")
+            # author = Author(name=request.author_name)
+            # db.add(author)
+            # db.commit()
+            # db.refresh(author)
 
         db_book = db.query(Book).filter(Book.title == request.title).first()
         if db_book:

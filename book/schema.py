@@ -6,7 +6,6 @@ class book_data(BaseModel):
     title : str
     ratings: float
     author_id : int
-    author_name : str
     body : str
 
 class update_data(BaseModel):

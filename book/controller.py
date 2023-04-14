@@ -2,12 +2,15 @@ from fastapi import status, Depends, APIRouter
 from sqlalchemy.orm import Session
 
 from .schema import book_data, update_data
-from router.apirouter import book_router
 from server.database import get_db
 from .helper import create_book, update_book_data, delete_book_data, get_book_data, get_all_books
 
+book_router = APIRouter(
+    # tags= ["Book"],
+    # prefix= "/Book"
+)
 
-@book_router.post('/create', status_code= status.HTTP_201_CREATED)
+@book_router.post('/create_book', status_code= status.HTTP_201_CREATED)
 def upload_book(request : book_data, db: Session = Depends(get_db)):
     return create_book(request, db)
 
