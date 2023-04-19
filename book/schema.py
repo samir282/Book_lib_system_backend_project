@@ -1,14 +1,24 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from fastapi import UploadFile, File
 from datetime import date
 
-class book_data(BaseModel):
-    #id : int
-    title : str
-    ratings: float
-    author_id : int
-    body : str
 
-class update_data(BaseModel):
+class Book_data(BaseModel):
+    id : int
+    title : str
+    rating: float
+    author_id : int
+
+class Update_data(BaseModel):
     title : str
     rating : float
-    body : str
+
+class Book_details(BaseModel):
+    id : int
+    title : str
+    rating : float
+    createdAt : date
+    updatedAt : date
+    
+    class Config():
+        orm_mode = True

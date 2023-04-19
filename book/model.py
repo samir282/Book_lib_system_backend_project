@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
+
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, BLOB, LargeBinary
 from sqlalchemy.orm import relationship
 
 
@@ -10,9 +11,9 @@ class Book(base):
     __tablename__="books"
     id = Column(Integer,primary_key=True,index=True)
     title = Column(String(255),unique=True,index=True)
-    ratings = Column(Float)
+    rating = Column(Float)
     authorId = Column(Integer,ForeignKey('authors.id'))
     createdAt = Column(Date)
     updatedAt = Column(Date)
-    body = Column(String(255))
+    body = Column(LargeBinary(length=(2**32)-1))
     authors = relationship('Author',back_populates='books')

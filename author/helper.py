@@ -12,7 +12,8 @@ def create_author(request: author_data, db : Session):
         db.add(new_author)
         db.commit()
         db.refresh(new_author)
-        return {'details' : 'author created'}
+        return {'details' : 'author created',
+                'id' : new_author.id}
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -28,7 +29,7 @@ def delete_author_data(author_id : int, db : Session):
 
         db.delete(db_author)
         db.commit()
-        return {'details': 'Auther data deleted'}
+        return {'details': f'Auther data of id : {db_author.id} deleted'}
     except HTTPException as e:
         raise e
     except Exception as e:

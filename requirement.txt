@@ -1,5 +1,5 @@
 sqlalchemy
 mysql-connector-python
-mysql-python
 mysqlclient
 PyMySQL
+python-multipart

@@ -11,7 +11,6 @@ base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 app.include_router(appRoutes, prefix='/api')
-# app.include_router(author_router)
 
 
 
