@@ -5,14 +5,21 @@ from fastapi.responses import StreamingResponse
 from datetime import date
 from io import BytesIO
 from zipfile import ZipFile, ZIP_DEFLATED
-import math
+import math,uuid
+from uuid import UUID
 
 from .model import Book
 from author.model import Author
+from utility import validate_file
 
-async def create_book(title: str, rating: float, author_id: int, body: UploadFile, db : Session):
+async def create_book(title: str, rating: float, author_id: UUID, body: UploadFile, db : Session):
     try:
-        author = db.query(Author).filter(Author.id == author_id).first()
+        validate_file(body)
+
+        if rating>10 or rating<0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='rating should be out of 10')
+        
+        author = db.query(Author).filter(Author.uuid == author_id).first()
         if not author:
             raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "Author doesn't exist. First update the author data")
 
@@ -24,9 +31,10 @@ async def create_book(title: str, rating: float, author_id: int, body: UploadFil
         
         content = await body.read()
         new_book = Book(
+            uuid = uuid.uuid4(),
             title= title,
             rating=rating,
-            authorId=author_id,
+            authorId=author.id,
             createdAt=date.today(),
             updatedAt=date.today(),
             body=content
@@ -35,7 +43,7 @@ async def create_book(title: str, rating: float, author_id: int, body: UploadFil
         db.commit()
         db.refresh(new_book)
         return {'Message' : 'book created',
-                'BookId' : new_book.id}
+                'BookId' : new_book.uuid}
     
     except HTTPException as e:
         raise e
@@ -44,13 +52,13 @@ async def create_book(title: str, rating: float, author_id: int, body: UploadFil
     
     
     
-async def update_book_data(book_id: int, title: str, rating: float,body:UploadFile, db: Session):
+async def update_book_data(book_id: UUID, title: str, rating: float,body:UploadFile, db: Session):
     try:
-        db_book = db.query(Book).filter(Book.id == book_id).first()
+        if rating>10 or rating<0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='rating should be out of 10')
+        db_book = db.query(Book).filter(Book.uuid == book_id).first()
         if not db_book:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Book not found')
-        if rating>10:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='rating should be out of 10')
 
         db_book.title = title
         db_book.rating = rating
@@ -68,9 +76,9 @@ async def update_book_data(book_id: int, title: str, rating: float,body:UploadFi
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"An error occurred: {e}")
     
     
-def delete_book_data(book_id : int, db : Session):
+def delete_book_data(book_id : UUID, db : Session):
     try:
-        db_book = db.query(Book).filter(Book.id == book_id).first()
+        db_book = db.query(Book).filter(Book.uuid == book_id).first()
 
         if not db_book:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Book not found')
@@ -84,9 +92,9 @@ def delete_book_data(book_id : int, db : Session):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"An error occurred: {e}")
     
     
-def get_book_data(book_id : int, db : Session):
+def download_book(book_id : UUID, db : Session):
     try:
-        book = db.query(Book).filter(Book.id == book_id).first()
+        book = db.query(Book).filter(Book.uuid == book_id).first()
 
         if not book:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Book not found')
@@ -99,7 +107,7 @@ def get_book_data(book_id : int, db : Session):
         raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail= f'An error occured: {e}')
     
     
-def get_books(page, limit, db: Session):
+def download_books_file(page, limit, db: Session):
     try:
         books = db.query(Book).offset((page-1)*limit).limit(limit).all()
         total_books = db.query(Book).count()
@@ -130,10 +138,10 @@ def get_books(page, limit, db: Session):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'an error occurred: {str(e)}')
     
     
-def get_book_details(author_or_title: str, db : Session):
+def get_book_details(author_or_title : str,min_rating : float, db : Session):
     try:
         books = db.query(Book).join(Author).filter(
-                text("authors.name LIKE :matching_str OR books.title LIKE :matching_str")).params(matching_str=f'%{author_or_title}%').all()
+                text("(authors.name LIKE :matching_str OR books.title LIKE :matching_str) AND books.rating >= :rating")).params(matching_str=f'%{author_or_title}%', rating=min_rating).all()
         if not books:
             raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= 'Book not found')
         return books

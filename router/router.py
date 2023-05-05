@@ -14,9 +14,3 @@ router.include_router(
     tags= ["Author"],
     prefix= "/Author"
 )
-
-# router.include_router(
-#     author_router,
-#     tags= ["Author"],
-#     prefix= "/Author"
-# )
